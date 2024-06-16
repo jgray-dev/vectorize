@@ -1,29 +1,16 @@
-# Create T3 App
+# Vectorize
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+This is devex tools I use, specifically for faster development of my app https://swe.ing
 
-## What's next? How do I make an app with this?
+#### Normalize
+Takes in one prompt (the user's message content) and a easily editable system prompt. Passes the users content through GPT-4t with the provided system prompt. Will display embeddings for both original and "normalized" message, along with their similarity score at the bottom of the page.
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+Example system prompt: `Using your knowledge of natural language processing, your task is to take a user's post content, and "generalize" it into text that would be converted well and accurately into an embedding. This embedding is used to generate recommendations for other user's on the platform. You should specifically focus on content that is excessively short or excessively long, but keep the demeanor and semantic meaning of the content. Note user's may be referencing images or video's you do not have access to. Use your best judgement in these situations. Do not return any boilerplate, or follow up text.`
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+Input text: `Javascript is like duct tape. Its usually not the right choice for the job, but it does so many jobs decently its difficult to live without it.`
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+Output text: `JavaScript is often compared to duct tape; while it may not always be the ideal solution for every programming task, its versatility makes it an indispensable tool in web development.`
 
-## Learn More
+Similarity: `0.907184482`
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
-
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
-
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
-
-## How do I deploy this?
-
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+This tool is used to test different system prompts to see how we can "normalize" or "generalize" text before converting it to an embedding. Similarity is shown to see just how far the embedding has deviated from the original. Best use case for this is when user's make really short messages, often referencing images we can't correctly convert into an embedding, or really long messages where the semantic meaning can't be easily found, or the user rant's about a lot of different topics.
