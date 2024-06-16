@@ -7,7 +7,12 @@ export const env = createEnv({
    * isn't built with invalid env vars.
    */
   server: {
-    NODE_ENV: z.enum(["development", "test", "production"]),
+    NODE_ENV: z
+      .enum(["development", "test", "production"])
+      .default("development"),
+    OPENAI: z.string(),
+    PINECONE_API_KEY: z.string(),
+    PINECONE_ENVIRONMENT: z.string(),
   },
 
   /**
@@ -25,6 +30,9 @@ export const env = createEnv({
    */
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
+    OPENAI: process.env.OPENAI,
+    PINECONE_API_KEY: process.env.PINECONE_API_KEY,
+    PINECONE_ENVIRONMENT: process.env.PINECONE_ENVIRONMENT,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**
