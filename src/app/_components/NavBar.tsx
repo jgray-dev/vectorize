@@ -16,8 +16,15 @@ export default function NavBar() {
       onMouseDown={()=>{
       router.push("/normalize")
     }}>
-      Normalize Embeddings
+      Normalize
     </div>
+      <div className={"hover:text-white hover:cursor-pointer duration-200 bg-transparent text-gray-400"}
+        onMouseDown={()=>{
+          router.push("/visualize")
+        }}
+      >
+Visualize
+      </div>
   </div>
     )
 }
