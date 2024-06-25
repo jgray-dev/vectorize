@@ -6,6 +6,8 @@ import { insertPinecone, searchPinecone } from "~/server/hidden";
 
 interface HeatmapComponentProps {
   embedding: number[];
+  minValue: number;
+  maxValue: number;
 }
 
 interface HoveredValue {
@@ -15,18 +17,16 @@ interface HoveredValue {
 }
 
 const HeatmapComponent: React.FC<HeatmapComponentProps> = React.memo(
-  ({ embedding }) => {
+  ({ embedding, minValue, maxValue }) => {
     const [hoveredValue, setHoveredValue] = useState<HoveredValue | null>(null);
 
-    const { minValue, maxValue, cellSize, cols, rows } = useMemo(
+    const { cellSize, cols, rows } = useMemo(
       () => ({
-        minValue: Math.min(...embedding),
-        maxValue: Math.max(...embedding),
         cellSize: 12,
         cols: 48,
         rows: 32,
       }),
-      [embedding],
+      []
     );
 
     const getColor = useCallback(
@@ -35,14 +35,14 @@ const HeatmapComponent: React.FC<HeatmapComponentProps> = React.memo(
         const transformedValue =
           (Math.sign(normalizedValue - 0.5) *
             Math.pow(Math.abs(normalizedValue - 0.5) * 2, 0.65)) /
-            2 +
+          2 +
           0.5;
         const hue = transformedValue * 180 + 165;
         const saturation = 100;
         const lightness = 50 + (transformedValue - 0.5) * 40;
         return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
       },
-      [minValue, maxValue],
+      [minValue, maxValue]
     );
 
     return (
@@ -82,7 +82,7 @@ const HeatmapComponent: React.FC<HeatmapComponentProps> = React.memo(
         )}
       </div>
     );
-  },
+  }
 );
 
 HeatmapComponent.displayName = "HeatmapComponent";
@@ -103,7 +103,7 @@ const EmbeddingVisualizer: React.FC = () => {
       const { id, value } = e.target;
       setInputs((prev) => ({ ...prev, [id]: value }));
     },
-    [],
+    []
   );
 
   const handleSubmit = useCallback(async () => {
@@ -123,13 +123,21 @@ const EmbeddingVisualizer: React.FC = () => {
       setAdditionalInfo(`Similarity ${similarity}`);
     } catch (error) {
       setAdditionalInfo(
-        `Error generating embeddings: ${(error as Error).message}`,
+        `Error generating embeddings: ${(error as Error).message}`
       );
     }
   }, [inputs]);
 
+  const { minValue, maxValue } = useMemo(() => {
+    const allValues = [...embeddings.embedding1, ...embeddings.embedding2];
+    return {
+      minValue: Math.min(...allValues),
+      maxValue: Math.max(...allValues),
+    };
+  }, [embeddings]);
+
   return (
-    <div className="w-full space-y-8 p-4 pt-20 sm:p-10">
+    <div className="w-full space-y-8 p-4 pt-24 sm:pt-20 sm:p-10">
       <div className="flex flex-col space-y-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:space-y-0">
         <InputField
           id="input1"
@@ -162,10 +170,14 @@ const EmbeddingVisualizer: React.FC = () => {
         <HeatmapWrapper
           title="Heatmap for Input 1"
           embedding={embeddings.embedding1}
+          minValue={minValue}
+          maxValue={maxValue}
         />
         <HeatmapWrapper
           title="Heatmap for Input 2"
           embedding={embeddings.embedding2}
+          minValue={minValue}
+          maxValue={maxValue}
         />
       </div>
     </div>
@@ -194,13 +206,23 @@ const InputField: React.FC<{
 
 InputField.displayName = "InputField";
 
-const HeatmapWrapper: React.FC<{ title: string; embedding: number[] }> =
-  React.memo(({ title, embedding }) => (
-    <div className="flex flex-col items-center">
-      <h3 className="mb-4 text-center text-lg font-bold">{title}</h3>
-      {embedding.length > 0 && <HeatmapComponent embedding={embedding} />}
-    </div>
-  ));
+const HeatmapWrapper: React.FC<{
+  title: string;
+  embedding: number[];
+  minValue: number;
+  maxValue: number;
+}> = React.memo(({ title, embedding, minValue, maxValue }) => (
+  <div className="flex flex-col items-center">
+    <h3 className="mb-4 text-center text-lg font-bold">{title}</h3>
+    {embedding.length > 0 && (
+      <HeatmapComponent
+        embedding={embedding}
+        minValue={minValue}
+        maxValue={maxValue}
+      />
+    )}
+  </div>
+));
 
 HeatmapWrapper.displayName = "HeatmapWrapper";
 
