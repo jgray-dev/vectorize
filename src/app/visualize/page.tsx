@@ -40,7 +40,6 @@ const HeatmapComponent: React.FC<HeatmapComponentProps> = React.memo(
       if (adjustedValue <= 0.01) return 'rgb(0, 0, 0)';  // Black for minimum
       if (adjustedValue >= 0.99) return 'rgb(255, 255, 255)';  // White for maximum
 
-      // Determine the primary color based on colorState
       let primaryColor: string;
       switch (colorState) {
         case 0:
@@ -53,20 +52,15 @@ const HeatmapComponent: React.FC<HeatmapComponentProps> = React.memo(
           primaryColor = 'blue';
           break;
         default:
-          primaryColor = 'red';  // Default to red if state is unexpected
+          primaryColor = 'red';
       }
-
-      // Interpolate colors for non-extreme values
       if (adjustedValue <= 0.4) {
-        // Near-black to dark primary color
         const colorValue = Math.round(160 * (adjustedValue - 0.01) / 0.39);
         return `rgb(${primaryColor === 'red' ? colorValue : 0}, ${primaryColor === 'green' ? colorValue : 0}, ${primaryColor === 'blue' ? colorValue : 0})`;
       } else if (adjustedValue <= 0.6) {
-        // Dark primary color to medium primary color
         const colorValue = Math.round(160 + (200 - 160) * (adjustedValue - 0.4) / 0.2);
         return `rgb(${primaryColor === 'red' ? colorValue : 0}, ${primaryColor === 'green' ? colorValue : 0}, ${primaryColor === 'blue' ? colorValue : 0})`;
       } else {
-        // Medium primary color to near-white
         const primaryColorValue = Math.round(200 + (250 - 200) * (adjustedValue - 0.6) / 0.39);
         const secondaryColorValue = Math.round(180 * Math.pow((adjustedValue - 0.6) / 0.39, 2));
         return `rgb(${primaryColor === 'red' ? primaryColorValue : secondaryColorValue}, ${primaryColor === 'green' ? primaryColorValue : secondaryColorValue}, ${primaryColor === 'blue' ? primaryColorValue : secondaryColorValue})`;
