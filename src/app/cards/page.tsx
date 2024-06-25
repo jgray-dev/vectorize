@@ -71,18 +71,32 @@ const MemoryGame: React.FC = () => {
 
     if (newFlippedIndices.length === 2) {
       const [firstIndex, secondIndex] = newFlippedIndices;
-      if (cards[firstIndex].image === cards[secondIndex].image) {
-        const newMatchedPairs = [...matchedPairs, firstIndex, secondIndex];
-        setMatchedPairs(newMatchedPairs);
-        setScore(score + 1);
-        setFlippedIndices([]);
 
-        if (newMatchedPairs.length === cards.length) {
-          stopTimer();
-          setShowConfetti(true);
+      // Check if both indices are valid
+      if (firstIndex !== undefined && secondIndex !== undefined &&
+        firstIndex >= 0 && firstIndex < cards.length &&
+        secondIndex >= 0 && secondIndex < cards.length) {
+
+        const firstCard = cards[firstIndex];
+        const secondCard = cards[secondIndex];
+
+        if (firstCard && secondCard && firstCard.image === secondCard.image) {
+          const newMatchedPairs = [...matchedPairs, firstIndex, secondIndex];
+          setMatchedPairs(newMatchedPairs);
+          setScore(score + 1);
+          setFlippedIndices([]);
+
+          if (newMatchedPairs.length === cards.length) {
+            stopTimer();
+            setShowConfetti(true);
+          }
+        } else {
+          setTimeout(() => setFlippedIndices([]), 1000);
         }
       } else {
-        setTimeout(() => setFlippedIndices([]), 1000);
+        // Handle the case where indices are invalid
+        console.error('Invalid card indices');
+        setFlippedIndices([]);
       }
     }
   };
