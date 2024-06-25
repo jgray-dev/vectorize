@@ -129,7 +129,7 @@ const EmbeddingVisualizer: React.FC = () => {
   }, [inputs]);
 
   return (
-    <div className="w-full space-y-8 p-4 pt-10 sm:p-10 sm:pt-20">
+    <div className="w-full space-y-8 p-4 pt-10 sm:p-10 sm:pt-32">
       <div className="flex flex-col space-y-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:space-y-0">
         <InputField
           id="input1"
