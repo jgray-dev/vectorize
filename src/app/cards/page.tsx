@@ -8,9 +8,9 @@ const cardImages = [
   '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼'
 ];
 
-const useTimer = (initialTime = 0, running = false) => {
+const useTimer = (initialTime = 0) => {
   const [time, setTime] = useState(initialTime);
-  const [isRunning, setIsRunning] = useState(running);
+  const [isRunning, setIsRunning] = useState(false);
 
   useEffect(() => {
     let interval;
@@ -24,7 +24,7 @@ const useTimer = (initialTime = 0, running = false) => {
   const stop = () => setIsRunning(false);
   const reset = () => setTime(0);
 
-  return { time, start, stop, reset };
+  return { time, start, stop, reset, isRunning };
 };
 
 const MemoryGame = () => {
@@ -33,7 +33,7 @@ const MemoryGame = () => {
   const [matchedPairs, setMatchedPairs] = useState([]);
   const [score, setScore] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
-  const { time, start: startTimer, stop: stopTimer, reset: resetTimer } = useTimer();
+  const { time, start: startTimer, stop: stopTimer, reset: resetTimer, isRunning } = useTimer();
 
   useEffect(() => {
     initializeGame();
@@ -49,11 +49,15 @@ const MemoryGame = () => {
     setScore(0);
     setShowConfetti(false);
     resetTimer();
-    startTimer();
+    stopTimer();
   };
 
   const handleCardClick = (index) => {
     if (flippedIndices.length === 2 || flippedIndices.includes(index) || matchedPairs.includes(index)) return;
+
+    if (!isRunning) {
+      startTimer();
+    }
 
     const newFlippedIndices = [...flippedIndices, index];
     setFlippedIndices(newFlippedIndices);
@@ -66,7 +70,6 @@ const MemoryGame = () => {
         setScore(score + 1);
         setFlippedIndices([]);
 
-        // Check if all pairs are matched
         if (newMatchedPairs.length === cards.length) {
           stopTimer();
           setShowConfetti(true);
@@ -94,24 +97,23 @@ const MemoryGame = () => {
       >
         <Shuffle className="mr-2" /> New Game
       </button>
-      <div className="grid grid-cols-4 gap-6 perspective-[1000px]">
+      <div className="grid grid-cols-4 gap-6 perspective-1000">
         {cards.map((card, index) => (
           <div
             key={card.id}
-            className="w-24 h-24 cursor-pointer transition-all duration-500 transform-style-preserve-3d"
-            style={{
-              transform: isFlipped(index) ? 'rotateY(180deg) translateZ(100px)' : 'rotateY(0deg) translateZ(0px)',
-            }}
+            className={`w-24 h-24 cursor-pointer ${isFlipped(index) ? 'flipped' : ''}`}
             onClick={() => handleCardClick(index)}
           >
-            <div className="absolute w-full h-full backface-hidden">
-              <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center text-white text-3xl shadow-lg">
-                ?
+            <div className="flip-card-inner w-full h-full">
+              <div className="flip-card-front">
+                <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center text-white text-3xl shadow-lg">
+                  ?
+                </div>
               </div>
-            </div>
-            <div className="absolute w-full h-full backface-hidden rotate-y-180">
-              <div className="w-full h-full bg-white rounded-xl border-4 border-yellow-400 flex items-center justify-center text-5xl shadow-lg">
-                {card.image}
+              <div className="flip-card-back">
+                <div className="w-full h-full bg-white rounded-xl border-4 border-yellow-400 flex items-center justify-center text-5xl shadow-lg">
+                  {card.image}
+                </div>
               </div>
             </div>
           </div>
