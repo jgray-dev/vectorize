@@ -1,30 +1,55 @@
 "use client";
 
-import {useRouter} from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function NavBar() {
-  const router = useRouter()
+  const router = useRouter();
   return (
-  <div className={"fixed top-0 h-12 bg-white/5 flex items-center justify-between px-4 py-2 z-50 gap-8"}>
-    <div className={"hover:text-white hover:cursor-pointer duration-200 bg-transparent text-gray-400"}
-      onMouseDown={()=>{
-      router.push("/")
-    }}>
-      Home
-    </div>
-    <div className={"hover:text-white hover:cursor-pointer duration-200 bg-transparent text-gray-400"}
-      onMouseDown={()=>{
-      router.push("/normalize")
-    }}>
-      Normalize
-    </div>
-      <div className={"hover:text-white hover:cursor-pointer duration-200 bg-transparent text-gray-400"}
-        onMouseDown={()=>{
-          router.push("/visualize")
+    <div
+      className={
+        "fixed top-0 z-50 flex h-12 w-full items-center justify-between gap-8 bg-black/55 px-4 py-2 backdrop-blur-md"
+      }
+    >
+      <div
+        className={
+          "bg-transparent text-gray-400 duration-200 hover:cursor-pointer hover:text-white"
+        }
+        onMouseDown={() => {
+          router.push("/");
         }}
       >
-Visualize
+        Home
       </div>
-  </div>
-    )
+      <div
+        className={
+          "bg-transparent text-gray-400 duration-200 hover:cursor-pointer hover:text-white"
+        }
+        onMouseDown={() => {
+          router.push("/normalize");
+        }}
+      >
+        Normalize
+      </div>
+      <div
+        className={
+          "bg-transparent text-gray-400 duration-200 hover:cursor-pointer hover:text-white"
+        }
+        onMouseDown={() => {
+          router.push("/visualize");
+        }}
+      >
+        Visualize
+      </div>
+      <div
+        className={
+          "bg-transparent text-gray-400 duration-200 hover:cursor-pointer hover:text-white"
+        }
+        onMouseDown={() => {
+          router.push("/graph");
+        }}
+      >
+        Graph
+      </div>
+    </div>
+  );
 }
