@@ -15,7 +15,7 @@ interface Card {
   image: string;
 }
 
-const useTimer = (initialTime: number = 0) => {
+const useTimer = (initialTime = 0) => {
   const [time, setTime] = useState(initialTime);
   const [isRunning, setIsRunning] = useState(false);
 
@@ -72,7 +72,6 @@ const MemoryGame: React.FC = () => {
     if (newFlippedIndices.length === 2) {
       const [firstIndex, secondIndex] = newFlippedIndices;
 
-      // Check if both indices are valid
       if (firstIndex !== undefined && secondIndex !== undefined &&
         firstIndex >= 0 && firstIndex < cards.length &&
         secondIndex >= 0 && secondIndex < cards.length) {
@@ -94,7 +93,6 @@ const MemoryGame: React.FC = () => {
           setTimeout(() => setFlippedIndices([]), 1000);
         }
       } else {
-        // Handle the case where indices are invalid
         console.error('Invalid card indices');
         setFlippedIndices([]);
       }
