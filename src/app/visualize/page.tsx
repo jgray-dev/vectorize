@@ -32,7 +32,6 @@ const HeatmapComponent: React.FC<HeatmapComponentProps> = React.memo(({ embeddin
         Math.pow(Math.abs(normalizedValue - 0.5) * 2, 0.65)) /
       2 +
       0.5;
-    // Modify the hue calculation to use only half the spectrum (0 to 180 degrees)
     const hue = transformedValue * 180 + 165;
     const saturation = 100;
     const lightness = 50 + (transformedValue - 0.5) * 40;
@@ -40,8 +39,11 @@ const HeatmapComponent: React.FC<HeatmapComponentProps> = React.memo(({ embeddin
   }, [minValue, maxValue]);
 
   return (
-    <div style={{ position: "relative" }}>
-      <svg width={cols * cellSize} height={rows * cellSize}>
+    <div className="relative w-full sm:w-auto">
+      <svg
+        className="w-full h-auto sm:w-[576px] sm:h-[384px]"
+        viewBox={`0 0 ${cols * cellSize} ${rows * cellSize}`}
+      >
         {embedding.map((value, index) => {
           const x = (index % cols) * cellSize;
           const y = Math.floor(index / cols) * cellSize;
@@ -62,17 +64,10 @@ const HeatmapComponent: React.FC<HeatmapComponentProps> = React.memo(({ embeddin
       </svg>
       {hoveredValue && (
         <div
+          className="absolute bg-black bg-opacity-70 text-white text-xs p-1 rounded pointer-events-none z-10"
           style={{
-            position: "absolute",
             left: hoveredValue.x + cellSize / 2,
             top: hoveredValue.y - 20,
-            background: "rgba(0,0,0,0.7)",
-            color: "white",
-            padding: "2px 4px",
-            borderRadius: "3px",
-            fontSize: "12px",
-            pointerEvents: "none",
-            zIndex: 100,
           }}
         >
           {hoveredValue.value.toFixed(6)}
@@ -119,8 +114,8 @@ const EmbeddingVisualizer: React.FC = () => {
   }, [inputs]);
 
   return (
-    <div className="w-full space-y-8 p-10 pt-20">
-      <div className="grid grid-cols-3 gap-4">
+    <div className="w-full space-y-8 p-4 sm:p-10 pt-10 sm:pt-20">
+      <div className="flex flex-col space-y-4 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-4">
         <InputField
           id="input1"
           label="Input 1"
@@ -148,7 +143,7 @@ const EmbeddingVisualizer: React.FC = () => {
           Submit
         </button>
       </div>
-      <div className="grid grid-cols-2 gap-16">
+      <div className="flex flex-col space-y-8 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-16">
         <HeatmapWrapper title="Heatmap for Input 1" embedding={embeddings.embedding1} />
         <HeatmapWrapper title="Heatmap for Input 2" embedding={embeddings.embedding2} />
       </div>
