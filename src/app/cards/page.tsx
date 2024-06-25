@@ -1,19 +1,26 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Shuffle, Clock } from 'lucide-react';
-import Confetti from 'react-confetti';
+import dynamic from 'next/dynamic';
+
+const Confetti = dynamic(() => import('react-confetti'), { ssr: false });
 
 const cardImages = [
   '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼'
 ];
 
-const useTimer = (initialTime = 0) => {
+interface Card {
+  id: number;
+  image: string;
+}
+
+const useTimer = (initialTime: number = 0) => {
   const [time, setTime] = useState(initialTime);
   const [isRunning, setIsRunning] = useState(false);
 
   useEffect(() => {
-    let interval;
+    let interval: NodeJS.Timeout;
     if (isRunning) {
       interval = setInterval(() => setTime(t => t + 1), 1000);
     }
@@ -27,10 +34,10 @@ const useTimer = (initialTime = 0) => {
   return { time, start, stop, reset, isRunning };
 };
 
-const MemoryGame = () => {
-  const [cards, setCards] = useState([]);
-  const [flippedIndices, setFlippedIndices] = useState([]);
-  const [matchedPairs, setMatchedPairs] = useState([]);
+const MemoryGame: React.FC = () => {
+  const [cards, setCards] = useState<Card[]>([]);
+  const [flippedIndices, setFlippedIndices] = useState<number[]>([]);
+  const [matchedPairs, setMatchedPairs] = useState<number[]>([]);
   const [score, setScore] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
   const { time, start: startTimer, stop: stopTimer, reset: resetTimer, isRunning } = useTimer();
@@ -52,7 +59,7 @@ const MemoryGame = () => {
     stopTimer();
   };
 
-  const handleCardClick = (index) => {
+  const handleCardClick = (index: number) => {
     if (flippedIndices.length === 2 || flippedIndices.includes(index) || matchedPairs.includes(index)) return;
 
     if (!isRunning) {
@@ -80,7 +87,7 @@ const MemoryGame = () => {
     }
   };
 
-  const isFlipped = (index) => flippedIndices.includes(index) || matchedPairs.includes(index);
+  const isFlipped = (index: number) => flippedIndices.includes(index) || matchedPairs.includes(index);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 p-4">
