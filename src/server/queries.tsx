@@ -1,10 +1,5 @@
 "use server";
 
-
-import { embed } from "ai";
-
-
-
 import OpenAI from "openai";
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-call
