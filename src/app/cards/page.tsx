@@ -7,13 +7,24 @@ import dynamic from 'next/dynamic';
 const Confetti = dynamic(() => import('react-confetti'), { ssr: false });
 
 const cardImages = [
-  '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼'
+  '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼',
+  '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐔',
+  '🐧', '🐦', '🦆', '🦅', '🦉', '🐊', '🐺', '🐗'
 ];
 
 interface Card {
   id: number;
   image: string;
 }
+
+type Difficulty = 'easy' | 'medium' | 'hard' | 'impossible';
+
+const difficultySettings = {
+  easy: { cards: 8, cols: 4, size: 'card-size-large' },
+  medium: { cards: 16, cols: 4, size: 'card-size-medium' },
+  hard: { cards: 24, cols: 6, size: 'card-size-small' },
+  impossible: { cards: 48, cols: 8, size: 'card-size-tiny' }
+};
 
 const useTimer = (initialTime = 0) => {
   const [time, setTime] = useState(initialTime);
@@ -35,19 +46,24 @@ const useTimer = (initialTime = 0) => {
 };
 
 const MemoryGame: React.FC = () => {
+  const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [cards, setCards] = useState<Card[]>([]);
   const [flippedIndices, setFlippedIndices] = useState<number[]>([]);
   const [matchedPairs, setMatchedPairs] = useState<number[]>([]);
   const [score, setScore] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
   const { time, start: startTimer, stop: stopTimer, reset: resetTimer, isRunning } = useTimer();
+  const [isResetting, setIsResetting] = useState(false);
 
   useEffect(() => {
     initializeGame();
-  }, []);
+  }, [difficulty]);
 
   const initializeGame = () => {
-    const shuffledCards = [...cardImages, ...cardImages]
+    setIsResetting(true);
+    const { cards: cardCount } = difficultySettings[difficulty];
+    const gameCards = cardImages.slice(0, cardCount / 2);
+    const shuffledCards = [...gameCards, ...gameCards]
       .sort(() => Math.random() - 0.5)
       .map((image, index) => ({ id: index, image }));
     setCards(shuffledCards);
@@ -57,6 +73,7 @@ const MemoryGame: React.FC = () => {
     setShowConfetti(false);
     resetTimer();
     stopTimer();
+    setTimeout(() => setIsResetting(false), 100);
   };
 
   const handleCardClick = (index: number) => {
@@ -71,68 +88,63 @@ const MemoryGame: React.FC = () => {
 
     if (newFlippedIndices.length === 2) {
       const [firstIndex, secondIndex] = newFlippedIndices;
-
       if (firstIndex !== undefined && secondIndex !== undefined &&
-        firstIndex >= 0 && firstIndex < cards.length &&
-        secondIndex >= 0 && secondIndex < cards.length) {
-
-        const firstCard = cards[firstIndex];
-        const secondCard = cards[secondIndex];
-
-        if (firstCard && secondCard && firstCard.image === secondCard.image) {
-          const newMatchedPairs = [...matchedPairs, firstIndex, secondIndex];
-          setMatchedPairs(newMatchedPairs);
-          setScore(score + 1);
-          setFlippedIndices([]);
-
-          if (newMatchedPairs.length === cards.length) {
-            stopTimer();
-            setShowConfetti(true);
-          }
-        } else {
-          setTimeout(() => setFlippedIndices([]), 1000);
+        cards[firstIndex] && cards[secondIndex] &&
+        cards[firstIndex]?.image === cards[secondIndex]?.image) {
+        setMatchedPairs(prev => [...prev, firstIndex, secondIndex]);
+        setScore(prev => prev + 1);
+        setFlippedIndices([]);
+        if (matchedPairs.length + 2 === cards.length) {
+          stopTimer();
+          setShowConfetti(true);
         }
       } else {
-        console.error('Invalid card indices');
-        setFlippedIndices([]);
+        setTimeout(() => setFlippedIndices([]), 1000);
       }
     }
   };
 
   const isFlipped = (index: number) => flippedIndices.includes(index) || matchedPairs.includes(index);
 
+  const { cols, size } = difficultySettings[difficulty];
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 p-4">
+    <div className="memory-game">
       {showConfetti && <Confetti />}
-      <h1 className="text-4xl font-bold mb-6 text-white">Memory Game</h1>
-      <div className="mb-4 text-2xl text-white flex items-center">
-        <span className="mr-4">Score: {score}</span>
-        <Clock className="mr-2" />
+      <h1 className="game-title">Memory Game</h1>
+      <div className="game-info">
+        <span className="score">Score: {score}</span>
+        <Clock className="clock-icon" />
         <span>{time}s</span>
       </div>
-      <button
-        onClick={initializeGame}
-        className="mb-8 px-6 py-3 bg-yellow-400 text-blue-900 rounded-full hover:bg-yellow-300 transition-colors flex items-center text-lg font-semibold"
-      >
-        <Shuffle className="mr-2" /> New Game
+      <div className="difficulty-selector">
+        <select
+          value={difficulty}
+          onChange={(e) => setDifficulty(e.target.value as Difficulty)}
+          className="difficulty-select"
+        >
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+          <option value="impossible">Impossible</option>
+        </select>
+      </div>
+      <button onClick={initializeGame} className="new-game-button">
+        <Shuffle className="shuffle-icon" /> New Game
       </button>
-      <div className="grid grid-cols-4 gap-6 perspective-1000">
+      <div className={`card-grid cols-${cols}`}>
         {cards.map((card, index) => (
           <div
             key={card.id}
-            className={`w-24 h-24 cursor-pointer ${isFlipped(index) ? 'flipped' : ''}`}
+            className={`card ${size} ${isFlipped(index) && !isResetting ? 'flipped' : ''}`}
             onClick={() => handleCardClick(index)}
           >
-            <div className="flip-card-inner w-full h-full">
-              <div className="flip-card-front">
-                <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center text-white text-3xl shadow-lg">
-                  ?
-                </div>
+            <div className="card-inner">
+              <div className="card-front">
+                <div className="card-content">?</div>
               </div>
-              <div className="flip-card-back">
-                <div className="w-full h-full bg-white rounded-xl border-4 border-yellow-400 flex items-center justify-center text-5xl shadow-lg">
-                  {card.image}
-                </div>
+              <div className="card-back">
+                <div className="card-content">{isResetting ? '?' : card.image}</div>
               </div>
             </div>
           </div>
