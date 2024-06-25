@@ -8,6 +8,7 @@ interface HeatmapComponentProps {
   embedding: number[];
   minValue: number;
   maxValue: number;
+  colorState: number;
 }
 
 interface HoveredValue {
@@ -17,7 +18,7 @@ interface HoveredValue {
 }
 
 const HeatmapComponent: React.FC<HeatmapComponentProps> = React.memo(
-  ({ embedding, minValue, maxValue }) => {
+  ({ embedding, minValue, maxValue, colorState }) => {
     const [hoveredValue, setHoveredValue] = useState<HoveredValue | null>(null);
 
     const { cellSize, cols, rows } = useMemo(
@@ -29,21 +30,48 @@ const HeatmapComponent: React.FC<HeatmapComponentProps> = React.memo(
       []
     );
 
-    const getColor = useCallback(
-      (value: number): string => {
-        const normalizedValue = (value - minValue) / (maxValue - minValue);
-        const transformedValue =
-          (Math.sign(normalizedValue - 0.5) *
-            Math.pow(Math.abs(normalizedValue - 0.5) * 2, 0.65)) /
-          2 +
-          0.5;
-        const hue = transformedValue * 180 + 165;
-        const saturation = 100;
-        const lightness = 50 + (transformedValue - 0.5) * 40;
-        return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-      },
-      [minValue, maxValue]
-    );
+    const getColor = useCallback((value: number) => {
+      // Normalize the value to be between 0 and 1
+      const normalizedValue = (value - minValue) / (maxValue - minValue);
+      // Apply a gentler power function to stretch the middle range
+      const adjustedValue = Math.pow(normalizedValue, 0.8);
+
+      // Ensure extremes are black and white
+      if (adjustedValue <= 0.01) return 'rgb(0, 0, 0)';  // Black for minimum
+      if (adjustedValue >= 0.99) return 'rgb(255, 255, 255)';  // White for maximum
+
+      // Determine the primary color based on colorState
+      let primaryColor: string;
+      switch (colorState) {
+        case 0:
+          primaryColor = 'red';
+          break;
+        case 1:
+          primaryColor = 'green';
+          break;
+        case 2:
+          primaryColor = 'blue';
+          break;
+        default:
+          primaryColor = 'red';  // Default to red if state is unexpected
+      }
+
+      // Interpolate colors for non-extreme values
+      if (adjustedValue <= 0.4) {
+        // Near-black to dark primary color
+        const colorValue = Math.round(160 * (adjustedValue - 0.01) / 0.39);
+        return `rgb(${primaryColor === 'red' ? colorValue : 0}, ${primaryColor === 'green' ? colorValue : 0}, ${primaryColor === 'blue' ? colorValue : 0})`;
+      } else if (adjustedValue <= 0.6) {
+        // Dark primary color to medium primary color
+        const colorValue = Math.round(160 + (200 - 160) * (adjustedValue - 0.4) / 0.2);
+        return `rgb(${primaryColor === 'red' ? colorValue : 0}, ${primaryColor === 'green' ? colorValue : 0}, ${primaryColor === 'blue' ? colorValue : 0})`;
+      } else {
+        // Medium primary color to near-white
+        const primaryColorValue = Math.round(200 + (250 - 200) * (adjustedValue - 0.6) / 0.39);
+        const secondaryColorValue = Math.round(180 * Math.pow((adjustedValue - 0.6) / 0.39, 2));
+        return `rgb(${primaryColor === 'red' ? primaryColorValue : secondaryColorValue}, ${primaryColor === 'green' ? primaryColorValue : secondaryColorValue}, ${primaryColor === 'blue' ? primaryColorValue : secondaryColorValue})`;
+      }
+    }, [minValue, maxValue, colorState]);
 
     return (
       <div className="relative w-full sm:w-auto">
@@ -97,6 +125,7 @@ const EmbeddingVisualizer: React.FC = () => {
     embedding2: [],
   });
   const [additionalInfo, setAdditionalInfo] = useState<string>("");
+  const [colorState, setColorState] = useState<number>(0);
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,15 +147,19 @@ const EmbeddingVisualizer: React.FC = () => {
 
       void (await insertPinecone(emb1, 1));
       void (await insertPinecone(emb2, 2));
-      await delay(500);
+      await delay(100);
       const similarity = await searchPinecone();
-      setAdditionalInfo(`Similarity ${similarity}`);
+      setAdditionalInfo(`Similarity ${similarity && similarity > 1 ? 1 : similarity}`);
     } catch (error) {
       setAdditionalInfo(
         `Error generating embeddings: ${(error as Error).message}`
       );
     }
   }, [inputs]);
+
+  const handleColorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setColorState(Number(e.target.value));
+  };
 
   const { minValue, maxValue } = useMemo(() => {
     const allValues = [...embeddings.embedding1, ...embeddings.embedding2];
@@ -161,10 +194,19 @@ const EmbeddingVisualizer: React.FC = () => {
       <div className="text-center">
         <button
           onClick={handleSubmit}
-          className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+          className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 mr-4"
         >
           Submit
         </button>
+        <select
+          value={colorState}
+          onChange={handleColorChange}
+          className="rounded border p-2 text-black"
+        >
+          <option value={0}>Red</option>
+          <option value={1}>Green</option>
+          <option value={2}>Blue</option>
+        </select>
       </div>
       <div className="flex flex-col space-y-8 sm:grid sm:grid-cols-2 sm:gap-16 sm:space-y-0">
         <HeatmapWrapper
@@ -172,12 +214,14 @@ const EmbeddingVisualizer: React.FC = () => {
           embedding={embeddings.embedding1}
           minValue={minValue}
           maxValue={maxValue}
+          colorState={colorState}
         />
         <HeatmapWrapper
           title="Heatmap for Input 2"
           embedding={embeddings.embedding2}
           minValue={minValue}
           maxValue={maxValue}
+          colorState={colorState}
         />
       </div>
     </div>
@@ -211,7 +255,8 @@ const HeatmapWrapper: React.FC<{
   embedding: number[];
   minValue: number;
   maxValue: number;
-}> = React.memo(({ title, embedding, minValue, maxValue }) => (
+  colorState: number;
+}> = React.memo(({ title, embedding, minValue, maxValue, colorState }) => (
   <div className="flex flex-col items-center">
     <h3 className="mb-4 text-center text-lg font-bold">{title}</h3>
     {embedding.length > 0 && (
@@ -219,6 +264,7 @@ const HeatmapWrapper: React.FC<{
         embedding={embedding}
         minValue={minValue}
         maxValue={maxValue}
+        colorState={colorState}
       />
     )}
   </div>
